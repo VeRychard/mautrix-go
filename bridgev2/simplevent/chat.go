@@ -12,6 +12,7 @@ import (
 
 	"maunium.net/go/mautrix/bridgev2"
 	"maunium.net/go/mautrix/bridgev2/database"
+	"maunium.net/go/mautrix/bridgev2/networkid"
 )
 
 // ChatResync is a simple implementation of [bridgev2.RemoteChatResync].
@@ -105,4 +106,31 @@ func (evt *Backfill) GetBackfillData(ctx context.Context, portal *bridgev2.Porta
 		return evt.GetDataFunc(ctx, portal)
 	}
 	return evt.Data, nil
+}
+
+// PinnedMessages is a simple implementation of [bridgev2.RemotePinnedMessages] and [bridgev2.RemotePinnedMessagesDelta].
+// It's treated as a delta if Pinned or Unpinned is set, otherwise PinnedList replaces the whole list.
+type PinnedMessages struct {
+	EventMeta
+
+	PinnedList []networkid.MessageID
+	Pinned     []networkid.MessageID
+	Unpinned   []networkid.MessageID
+}
+
+var (
+	_ bridgev2.RemotePinnedMessages      = (*PinnedMessages)(nil)
+	_ bridgev2.RemotePinnedMessagesDelta = (*PinnedMessages)(nil)
+)
+
+func (evt *PinnedMessages) IsPinnedMessagesDelta() bool {
+	return len(evt.Pinned) > 0 || len(evt.Unpinned) > 0
+}
+
+func (evt *PinnedMessages) GetPinnedMessages(ctx context.Context) ([]networkid.MessageID, error) {
+	return evt.PinnedList, nil
+}
+
+func (evt *PinnedMessages) GetPinnedMessageChanges(ctx context.Context) (pinned, unpinned []networkid.MessageID, err error) {
+	return evt.Pinned, evt.Unpinned, nil
 }

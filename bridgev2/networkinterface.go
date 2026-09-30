@@ -744,6 +744,13 @@ type RoomTopicHandlingNetworkAPI interface {
 	HandleMatrixRoomTopic(ctx context.Context, msg *MatrixRoomTopic) (bool, error)
 }
 
+type PinHandlingNetworkAPI interface {
+	NetworkAPI
+	// HandleMatrixPinnedEvents is called when the pinned events of a portal room are changed.
+	// Only bridged messages are included in the message lists.
+	HandleMatrixPinnedEvents(ctx context.Context, msg *MatrixRoomPinnedEvents) (bool, error)
+}
+
 type DisappearTimerChangingNetworkAPI interface {
 	NetworkAPI
 	// HandleMatrixDisappearingTimer is called when the disappearing timer of a portal room is changed.
@@ -1155,6 +1162,8 @@ func (ret RemoteEventType) String() string {
 		return "RemoteEventChatResync"
 	case RemoteEventChatDelete:
 		return "RemoteEventChatDelete"
+	case RemoteEventPinnedMessages:
+		return "RemoteEventPinnedMessages"
 	case RemoteEventBackfill:
 		return "RemoteEventBackfill"
 	default:
@@ -1179,6 +1188,7 @@ const (
 	RemoteEventChatResync
 	RemoteEventChatDelete
 	RemoteEventBackfill
+	RemoteEventPinnedMessages
 )
 
 // RemoteEvent represents a single event from the remote network, such as a message or a reaction.
@@ -1258,6 +1268,17 @@ type RemoteChatDelete interface {
 type RemoteChatDeleteWithChildren interface {
 	RemoteChatDelete
 	DeleteChildren() bool
+}
+
+type RemotePinnedMessages interface {
+	RemoteEvent
+	GetPinnedMessages(ctx context.Context) ([]networkid.MessageID, error)
+}
+
+type RemotePinnedMessagesDelta interface {
+	RemoteEvent
+	IsPinnedMessagesDelta() bool
+	GetPinnedMessageChanges(ctx context.Context) (pinned, unpinned []networkid.MessageID, err error)
 }
 
 type RemoteEventThatMayCreatePortal interface {
@@ -1500,6 +1521,14 @@ type MatrixRoomMeta[ContentType any] struct {
 	MatrixEventBase[ContentType]
 	PrevContent    ContentType
 	IsStateRequest bool
+}
+
+type MatrixRoomPinnedEvents struct {
+	MatrixRoomMeta[*event.PinnedEventsEventContent]
+
+	Pinned  []*database.Message
+	Added   []*database.Message
+	Removed []*database.Message
 }
 
 type MatrixRoomName = MatrixRoomMeta[*event.RoomNameEventContent]

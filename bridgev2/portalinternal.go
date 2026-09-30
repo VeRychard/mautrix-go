@@ -133,6 +133,26 @@ func (portal *PortalInternals) HandleMatrixReaction(ctx context.Context, sender 
 	return (*Portal)(portal).handleMatrixReaction(ctx, sender, evt)
 }
 
+func (portal *PortalInternals) HandleMatrixPinnedEvents(ctx context.Context, sender *UserLogin, origSender *OrigSender, evt *event.Event, isStateRequest bool) EventHandlingResult {
+	return (*Portal)(portal).handleMatrixPinnedEvents(ctx, sender, origSender, evt, isStateRequest)
+}
+
+func (portal *PortalInternals) ResolvePinnedEvents(ctx context.Context, eventIDs []id.EventID) []*database.Message {
+	return (*Portal)(portal).resolvePinnedEvents(ctx, eventIDs)
+}
+
+func (portal *PortalInternals) HandleRemotePinnedMessages(ctx context.Context, source *UserLogin, evt RemoteEvent) EventHandlingResult {
+	return (*Portal)(portal).handleRemotePinnedMessages(ctx, source, evt)
+}
+
+func (portal *PortalInternals) PinnedMessagesToEventIDs(ctx context.Context, msgIDs []networkid.MessageID) []id.EventID {
+	return (*Portal)(portal).pinnedMessagesToEventIDs(ctx, msgIDs)
+}
+
+func (portal *PortalInternals) GetCurrentPinnedEvents(ctx context.Context) ([]id.EventID, error) {
+	return (*Portal)(portal).getCurrentPinnedEvents(ctx)
+}
+
 func (portal *PortalInternals) GetTargetUser(ctx context.Context, userID id.UserID) (GhostOrUserLogin, error) {
 	return (*Portal)(portal).getTargetUser(ctx, userID)
 }
